@@ -3,6 +3,9 @@ import { PlannedDate } from '../../types/Planner';
 import { MonthDay } from '../../util/calendar';
 import TasksList from '../TasksList';
 import styled from 'styled-components';
+import { useHolidays } from '../../hooks/useHolidays';
+import { useCalendarContext } from '../../hooks/useCalendarContext';
+import { Holidays } from '../../types/HolidaysApi';
 
 interface PlanningItemProps extends PlannedDate {
   date: MonthDay;
@@ -33,6 +36,7 @@ const Heading = styled.div`
 
 const HeadingAnnotation = styled.div`
   font-size: 0.75rem;
+  flex: 1 0 max-content;
   color: #474747;
 `;
 
@@ -45,7 +49,18 @@ const DateText = styled.span<DateTextProps>`
   font-weight: ${(props) => (props.$currentMonth ? '700' : '400')};
 `;
 
+const HolidayText = styled.span`
+  font-size: 0.7rem;
+  color: #db6060;
+`;
+
 const PlanningItem: React.FC<PlanningItemProps> = ({ tasks, date }) => {
+  const { year } = useCalendarContext();
+
+  const { data } = useHolidays('ua', +year);
+
+  const holidays: Holidays | null = data ? data[date.getFullDate()] ?? null : null;
+
   return (
     <Wrapper $active={date.isCurrentMonth}>
       <Heading>
@@ -53,6 +68,7 @@ const PlanningItem: React.FC<PlanningItemProps> = ({ tasks, date }) => {
         <HeadingAnnotation>
           {tasks.length} {tasks.length === 1 ? 'card' : 'cards'}
         </HeadingAnnotation>
+        {holidays && <HolidayText>{holidays.name}</HolidayText>}
       </Heading>
       {date.isCurrentMonth && <TasksList itemId={date.getFullDate()} items={tasks} />}
     </Wrapper>
