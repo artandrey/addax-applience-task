@@ -11,6 +11,9 @@ import { download, exportTableToJsonFile, getFormatFromImageMime } from '../../u
 import { styled } from 'styled-components';
 import { useTagsStore } from '../../hooks/useTagsStorage.ts';
 import CalendarControls from '../CalendarControls/CalendarControls.tsx';
+import SearchForm from '../SearchForm/SearchForm.tsx';
+import { usePlannerFilter } from '../../hooks/usePlannerFilter.ts';
+import TagsFilter from '../TagsFilter/TagsFilter.tsx';
 
 const ControlsWrapper = styled.div`
   padding: 2rem;
@@ -39,6 +42,8 @@ const PlanningCalendar: React.FC = () => {
     }
   }
 
+  const { result: filteredDates, setSearchQuery, setAllowedTagsIds } = usePlannerFilter(dates);
+
   const elementRef = useRef<HTMLDivElement>(null);
 
   const convertToImage = useExportToImage({
@@ -53,22 +58,26 @@ const PlanningCalendar: React.FC = () => {
   }
 
   return (
-    <Calendar>
-      <CalendarControls />
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <CalendarGrid ref={elementRef}>
-          {(date) => (
-            <PlannerContext.Provider value={{ id: date.getFullDate() }}>
-              <PlanningItem date={date} {...(dates[date.getFullDate()] ?? createEmptyPlannedDate())} />
-            </PlannerContext.Provider>
-          )}
-        </CalendarGrid>
-        <ControlsWrapper>
-          <Button onClick={() => convertToImage()}>Export as image</Button>
-          <Button onClick={() => exportToJson()}>Export as JSON</Button>
-        </ControlsWrapper>
-      </DragDropContext>
-    </Calendar>
+    <>
+      <SearchForm handleSearch={setSearchQuery} />
+      <TagsFilter handleUpdate={setAllowedTagsIds} />
+      <Calendar>
+        <CalendarControls />
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <CalendarGrid ref={elementRef}>
+            {(date) => (
+              <PlannerContext.Provider value={{ id: date.getFullDate() }}>
+                <PlanningItem date={date} {...(filteredDates[date.getFullDate()] ?? createEmptyPlannedDate())} />
+              </PlannerContext.Provider>
+            )}
+          </CalendarGrid>
+          <ControlsWrapper>
+            <Button onClick={() => convertToImage()}>Export as image</Button>
+            <Button onClick={() => exportToJson()}>Export as JSON</Button>
+          </ControlsWrapper>
+        </DragDropContext>
+      </Calendar>
+    </>
   );
 };
 
